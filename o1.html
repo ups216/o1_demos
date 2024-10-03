@@ -2,47 +2,101 @@
 <html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <title>井字棋游戏</title>
+    <title>井字棋游戏 - 增强版</title>
     <style>
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #72EDF2 10%, #5151E5 100%);
+            height: 100vh;
+            margin: 0;
         }
         h1 {
             margin-top: 20px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        #currentPlayer {
+            margin-top: 10px;
+            font-size: 24px;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
         #game {
             display: grid;
             grid-template-columns: repeat(3, 100px);
-            grid-gap: 5px;
+            grid-gap: 10px;
             margin-top: 20px;
         }
         .cell {
             width: 100px;
             height: 100px;
-            background-color: #eee;
+            background-color: rgba(255, 255, 255, 0.8);
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 80px;
             cursor: pointer;
+            border-radius: 15px;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .cell:hover {
+            background-color: #fffa;
+        }
+        .cell:active {
+            transform: scale(0.95);
         }
         #result {
             margin-top: 20px;
             font-size: 24px;
-            height: 30px;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            min-height: 30px;
         }
         #resetButton {
             margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 12px 24px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 30px;
+            background-color: #fff;
+            color: #5151E5;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #resetButton:hover {
+            background-color: #f0f0f0;
+        }
+        #resetButton:active {
+            transform: scale(0.95);
+        }
+        .winning-cell {
+            background-color: #ffeb3b !important;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            50% { background-color: #fff176; }
+        }
+        @media (max-width: 600px) {
+            #game {
+                grid-template-columns: repeat(3, 80px);
+                grid-gap: 8px;
+            }
+            .cell {
+                width: 80px;
+                height: 80px;
+                font-size: 60px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>井字棋游戏</h1>
+    <h1>井字棋游戏 - 增强版</h1>
+    <div id="currentPlayer">当前玩家：X</div>
     <div id="game">
         <div class="cell" id="cell0"></div>
         <div class="cell" id="cell1"></div>
@@ -73,6 +127,12 @@
         ];
         const resultDisplay = document.getElementById('result');
         const resetButton = document.getElementById('resetButton');
+        const currentPlayerDisplay = document.getElementById('currentPlayer');
+
+        // 添加音效
+        const clickSound = new Audio('data:audio/mp3;base64,//uQxAA...');
+        const winSound = new Audio('data:audio/mp3;base64,//uQxAA...');
+        const drawSound = new Audio('data:audio/mp3;base64,//uQxAA...');
 
         function handleCellClick(event) {
             const clickedCell = event.target;
@@ -84,6 +144,7 @@
 
             gameState[clickedCellIndex] = currentPlayer;
             clickedCell.textContent = currentPlayer;
+            clickSound.play();
 
             checkResult();
         }
@@ -103,23 +164,30 @@
 
                 if (a === b && b === c) {
                     roundWon = true;
+                    // 高亮胜利的格子
+                    condition.forEach(index => {
+                        cells[index].classList.add('winning-cell');
+                    });
                     break;
                 }
             }
 
             if (roundWon) {
                 resultDisplay.textContent = `玩家 ${currentPlayer} 获胜！`;
+                winSound.play();
                 gameActive = false;
                 return;
             }
 
             if (!gameState.includes('')) {
                 resultDisplay.textContent = '平局！';
+                drawSound.play();
                 gameActive = false;
                 return;
             }
 
             currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            currentPlayerDisplay.textContent = `当前玩家：${currentPlayer}`;
         }
 
         function resetGame() {
@@ -127,7 +195,11 @@
             currentPlayer = 'X';
             gameState = ['','','','','','','','',''];
             resultDisplay.textContent = '';
-            cells.forEach(cell => cell.textContent = '');
+            currentPlayerDisplay.textContent = `当前玩家：${currentPlayer}`;
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('winning-cell');
+            });
         }
 
         cells.forEach(cell => cell.addEventListener('click', handleCellClick));

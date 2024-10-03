@@ -7,10 +7,12 @@
     <style>
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            background-color: #282c34;
+            color: #61dafb;
             font-family: Arial, sans-serif;
         }
         .board {
@@ -29,6 +31,11 @@
             border: 2px solid #000;
             font-size: 2em;
             cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .cell:hover {
+            background-color: #61dafb;
+            transform: scale(1.1);
         }
         .cell.disabled {
             pointer-events: none;
@@ -36,6 +43,18 @@
         .message {
             margin-top: 20px;
             font-size: 1.5em;
+        }
+        .message span {
+            color: #61dafb;
+        }
+        .winner {
+            background-color: #61dafb !important;
+            color: #282c34;
+            animation: winnerAnimation 1s infinite;
+        }
+        @keyframes winnerAnimation {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
         }
     </style>
 </head>
@@ -72,14 +91,21 @@
                 const [a, b, c] = winningCombinations[i];
                 if (board[a] && board[a] === board[b] && board[a] === board[c]) {
                     gameActive = false;
-                    messageElement.textContent = `玩家 ${board[a]} 获胜!`;
+                    messageElement.innerHTML = `玩家 <span>${board[a]}</span> 获胜!`;
+                    highlightWinnerCells([a, b, c]);
                     return;
                 }
             }
             if (!board.includes('')) {
                 gameActive = false;
-                messageElement.textContent = '平局!';
+                messageElement.innerHTML = '平局!';
             }
+        }
+
+        function highlightWinnerCells(cells) {
+            cells.forEach(index => {
+                document.querySelector(`[data-cell-index='${index}']`).classList.add('winner');
+            });
         }
 
         function initializeGame() {
