@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>井字棋游戏</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #282c34;
+            color: #61dafb;
+            font-family: 'Arial', sans-serif;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 10px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .cell:hover {
+            background-color: #61dafb;
+            transform: scale(1.1);
+        }
+        .cell.X {
+            color: #ff6347;
+            animation: fadeIn 0.5s;
+        }
+        .cell.O {
+            color: #4682b4;
+            animation: fadeIn 0.5s;
+        }
+        .message {
+            margin-top: 20px;
+            font-size: 1.5em;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="board" id="board"></div>
+    <div class="message" id="message"></div>
+
+    <script>
+        const boardElement = document.getElementById('board');
+        const messageElement = document.getElementById('message');
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let gameActive = true;
+
+        const winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        function handleCellClick(event) {
+            const cellIndex = event.target.getAttribute('data-cell-index');
+            if (board[cellIndex] !== '' || !gameActive) {
+                return;
+            }
+            board[cellIndex] = currentPlayer;
+            event.target.textContent = currentPlayer;
+            event.target.classList.add(currentPlayer);
+            checkResult();
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        }
+
+        function checkResult() {
+            let roundWon = false;
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                messageElement.textContent = `玩家 ${currentPlayer} 获胜!`;
+                gameActive = false;
+                return;
+            }
+
+            if (!board.includes('')) {
+                messageElement.textContent = '平局!';
+                gameActive = false;
+                return;
+            }
+        }
+
+        function createBoard() {
+            boardElement.innerHTML = '';
+            board.forEach((cell, index) => {
+                const cellElement = document.createElement('div');
+                cellElement.classList.add('cell');
+                cellElement.setAttribute('data-cell-index', index);
+                cellElement.addEventListener('click', handleCellClick);
+                boardElement.appendChild(cellElement);
+            });
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
