@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformer Self-Attention Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        svg {
+            margin-top: 50px;
+        }
+        .token {
+            cursor: pointer;
+        }
+        .attention-score {
+            font-size: 14px;
+            fill: black;
+        }
+    </style>
+</head>
+<body>
+    <svg id="visualization" width="800" height="400"></svg>
+
+    <script>
+        const sentence = "The quick brown fox".split(" ");
+        const attentionScores = [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.2, 0.1, 0.4, 0.3],
+            [0.3, 0.4, 0.1, 0.2],
+            [0.4, 0.3, 0.2, 0.1]
+        ];
+
+        const svg = document.getElementById("visualization");
+        const tokenPositions = [];
+        const tokenElements = [];
+
+        const radius = 5;
+        const tokenSpacing = 100;
+        const centerY = 200;
+
+        sentence.forEach((token, index) => {
+            const x = (index + 1) * tokenSpacing;
+            const y = centerY;
+
+            tokenPositions.push({ x, y });
+
+            const tokenElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            tokenElement.setAttribute("x", x);
+            tokenElement.setAttribute("y", y);
+            tokenElement.setAttribute("class", "token");
+            tokenElement.setAttribute("text-anchor", "middle");
+            tokenElement.setAttribute("dominant-baseline", "middle");
+            tokenElement.textContent = token;
+            svg.appendChild(tokenElement);
+
+            tokenElements.push(tokenElement);
+
+            tokenElement.addEventListener("mouseover", () => showAttention(index));
+            tokenElement.addEventListener("mouseout", hideAttention);
+            tokenElement.addEventListener("click", () => toggleAttentionScores(index));
+        });
+
+        function showAttention(index) {
+            hideAttention();
+            attentionScores[index].forEach((score, targetIndex) => {
+                const source = tokenPositions[index];
+                const target = tokenPositions[targetIndex];
+                const path = createCurvedPath(source, target, score);
+                path.setAttribute("class", "attention-path");
+                svg.appendChild(path);
+            });
+        }
+
+        function hideAttention() {
+            const paths = document.querySelectorAll(".attention-path");
+            paths.forEach(path => path.remove());
+        }
+
+        function toggleAttentionScores(index) {
+            const existingScores = document.querySelectorAll(`.attention-score[data-index="${index}"]`);
+            if (existingScores.length > 0) {
+                existingScores.forEach(score => score.remove());
+            } else {
+                attentionScores[index].forEach((score, targetIndex) => {
+                    const target = tokenPositions[targetIndex];
+                    const scoreElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    scoreElement.setAttribute("x", target.x);
+                    scoreElement.setAttribute("y", target.y - 20);
+                    scoreElement.setAttribute("class", "attention-score");
+                    scoreElement.setAttribute("text-anchor", "middle");
+                    scoreElement.setAttribute("dominant-baseline", "middle");
+                    scoreElement.setAttribute("data-index", index);
+                    scoreElement.textContent = `\\(${score.toFixed(2)}\\)`;
+                    svg.appendChild(scoreElement);
+                });
+                MathJax.typeset();
+            }
+        }
+
+        function createCurvedPath(source, target, score) {
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            const dx = target.x - source.x;
+            const dy = target.y - source.y;
+            const dr = Math.sqrt(dx * dx + dy * dy);
+            const pathData = `M${source.x},${source.y} A${dr},${dr} 0 0,1 ${target.x},${target.y}`;
+            path.setAttribute("d", pathData);
+            path.setAttribute("stroke", "black");
+            path.setAttribute("stroke-width", score * 5);
+            path.setAttribute("fill", "none");
+            return path;
+        }
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</body>
+</html>

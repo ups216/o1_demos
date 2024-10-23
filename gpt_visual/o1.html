@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self Attention Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding-top: 50px;
+        }
+        .token {
+            display: inline-block;
+            margin: 0 10px;
+            position: relative;
+            cursor: pointer;
+        }
+        .attention-score {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            border: 1px solid #000;
+            padding: 2px 5px;
+            display: none;
+        }
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="sentence">
+        <span class="token" data-index="0">The</span>
+        <span class="token" data-index="1">quick</span>
+        <span class="token" data-index="2">brown</span>
+        <span class="token" data-index="3">fox</span>
+    </div>
+    <svg id="attention-svg"></svg>
+
+    <script>
+        const tokens = document.querySelectorAll('.token');
+        const attentionScores = [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.2, 0.1, 0.4, 0.3],
+            [0.3, 0.4, 0.1, 0.2],
+            [0.4, 0.3, 0.2, 0.1]
+        ];
+
+        tokens.forEach(token => {
+            token.addEventListener('mouseover', handleMouseOver);
+            token.addEventListener('mouseout', handleMouseOut);
+            token.addEventListener('click', handleClick);
+        });
+
+        function handleMouseOver(event) {
+            const index = event.target.dataset.index;
+            drawAttentionLines(index);
+        }
+
+        function handleMouseOut() {
+            clearAttentionLines();
+        }
+
+        function handleClick(event) {
+            const index = event.target.dataset.index;
+            const scoreElement = event.target.querySelector('.attention-score');
+            if (scoreElement.style.display === 'none') {
+                scoreElement.textContent = `\\[ \\alpha_{${index}} = [${attentionScores[index].join(', ')}] \\]`;
+                scoreElement.style.display = 'block';
+                renderMathInElement(scoreElement);
+            } else {
+                scoreElement.style.display = 'none';
+            }
+        }
+
+        function drawAttentionLines(index) {
+            const svg = document.getElementById('attention-svg');
+            clearAttentionLines();
+            tokens.forEach((token, i) => {
+                if (i != index) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const startX = tokens[index].offsetLeft + tokens[index].offsetWidth / 2;
+                    const startY = tokens[index].offsetTop + tokens[index].offsetHeight / 2;
+                    const endX = token.offsetLeft + token.offsetWidth / 2;
+                    const endY = token.offsetTop + token.offsetHeight / 2;
+                    const curve = `M${startX},${startY} C${startX},${startY - 50} ${endX},${endY - 50} ${endX},${endY}`;
+                    line.setAttribute('d', curve);
+                    line.setAttribute('stroke', 'black');
+                    line.setAttribute('stroke-width', attentionScores[index][i] * 5);
+                    line.setAttribute('fill', 'none');
+                    svg.appendChild(line);
+                }
+            });
+        }
+
+        function clearAttentionLines() {
+            const svg = document.getElementById('attention-svg');
+            while (svg.firstChild) {
+                svg.removeChild(svg.firstChild);
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/contrib/auto-render.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css">
+</body>
+</html>
